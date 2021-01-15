@@ -24,15 +24,17 @@ class Cafes(db.Model):
     def __repr__(self):
         return f'<Cafes {self.name}'
 
-db.create_all()
+
 class CafeSchema(mm.Schema):
     class Meta:
         fields = ('id', 'name','location', 'map_url', 'img_url', 'has_sockets', 'has_wifi', 'seats', 'coffee_price')
 
+
 cafe_schema = CafeSchema()
 cafes_schema = CafeSchema(many=True)
 
-## POST CAFE: api/cafes
+
+# POST CAFE: api/cafes
 @app.route("/api/cafes", methods=['POST'])
 def add_cafe():
     name = request.json['name']
@@ -51,19 +53,21 @@ def add_cafe():
     return cafe_schema.jsonify(new_cafe)
 
 
-## GET ALL: api/cafes
+# GET ALL: api/cafes
 @app.route("/api/cafes", methods =['GET'])
 def get_all_cafes():
     all_cafes = db.session.query(Cafes).all()
     return cafes_schema.jsonify(all_cafes)
 
-## GET ONE: api/cafe/id
+
+#GET ONE: api/cafe/id
 @app.route("/api/cafes/<cafe_id>", methods =['GET'])
 def get_cafe(cafe_id):
     cafe = Cafes.query.get(cafe_id)
     return cafe_schema.jsonify(cafe)
 
-## PUT CAFE: api/cafe/id
+
+# PUT CAFE: api/cafe/id
 @app.route("/api/cafes/<cafe_id>", methods=['PUT'])
 def edit_cafe(cafe_id):
     edited_cafe = Cafes.query.get(cafe_id)
@@ -80,7 +84,8 @@ def edit_cafe(cafe_id):
     db.session.commit()
     return cafe_schema.jsonify(edited_cafe)
 
-## DELETE CAFE: api/cafe/id
+
+# DELETE CAFE: api/cafe/id
 @app.route("/api/cafes/<cafe_id>", methods =['DELETE'])
 def delete_cafe(cafe_id):
     cafe = Cafes.query.get(cafe_id)
@@ -89,8 +94,8 @@ def delete_cafe(cafe_id):
     return {"message":"Cafe Deleted"}
 
 
-## SEARCH CAFE: api/cafe/?location
-@app.route("/search")
+# SEARCH CAFE: api/search?location
+@app.route("/api/cafes/search")
 def search_cafe():
     requested_location = request.args.get('loc')
     cafes = db.session.query(Cafes).filter_by(location=requested_location.title()).all()
@@ -100,5 +105,5 @@ def search_cafe():
         return {"error": {"Not Found": "Sorry, we don't have a cafe at that location."}}
 
 
-if __name__ == ("__main__"):
+if __name__ == "__main__":
     app.run()
