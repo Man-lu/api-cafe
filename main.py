@@ -25,7 +25,7 @@ class Cafes(db.Model):
     def __repr__(self):
         return f'<Cafes {self.name}'
 
-
+db.create_all()
 class CafeSchema(mm.Schema):
     class Meta:
         fields = ('id', 'name','location', 'map_url', 'img_url', 'has_sockets', 'has_wifi', 'seats', 'coffee_price')
