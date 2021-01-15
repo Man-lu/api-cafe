@@ -1,4 +1,4 @@
-from flask import Flask, request,jsonify
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 
@@ -13,6 +13,7 @@ mm = Marshmallow(app)
 class Cafes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True,nullable=False)
+    location = db.Column(db.String(50), unique=False, nullable=False)
     map_url = db.Column(db.String(250), unique=False, nullable=False)
     img_url = db.Column(db.String(250), unique=False, nullable=False)
     has_sockets = db.Column(db.Boolean(), unique=False, nullable=False)
@@ -23,9 +24,10 @@ class Cafes(db.Model):
     def __repr__(self):
         return f'<Cafes {self.name}'
 
+db.create_all()
 class CafeSchema(mm.Schema):
     class Meta:
-        fields = ('id', 'name', 'map_url', 'img_url', 'has_sockets', 'has_wifi', 'seats', 'coffee_price')
+        fields = ('id', 'name','location', 'map_url', 'img_url', 'has_sockets', 'has_wifi', 'seats', 'coffee_price')
 
 cafe_schema = CafeSchema()
 cafes_schema = CafeSchema(many=True)
@@ -34,6 +36,7 @@ cafes_schema = CafeSchema(many=True)
 @app.route("/api/cafes", methods=['POST'])
 def add_cafe():
     name = request.json['name']
+    location = request.json['location']
     map_url = request.json['map_url']
     img_url = request.json['img_url']
     has_sockets = request.json['has_sockets']
@@ -41,7 +44,7 @@ def add_cafe():
     seats = request.json['seats']
     coffee_price = request.json['coffee_price']
 
-    new_cafe = Cafes(name=name,map_url=map_url,img_url=img_url,has_sockets=has_sockets,
+    new_cafe = Cafes(name=name.title(),location=location.title(),map_url=map_url,img_url=img_url,has_sockets=has_sockets,
                      has_wifi=has_wifi,seats=seats,coffee_price=coffee_price)
     db.session.add(new_cafe)
     db.session.commit()
@@ -64,7 +67,8 @@ def get_cafe(cafe_id):
 @app.route("/api/cafes/<cafe_id>", methods=['PUT'])
 def edit_cafe(cafe_id):
     edited_cafe = Cafes.query.get(cafe_id)
-    edited_cafe.name = request.json['name']
+    edited_cafe.name = request.json['name'].title()
+    edited_cafe.location = request.json['location'].title()
     edited_cafe.map_url = request.json['map_url']
     edited_cafe.img_url = request.json['img_url']
     edited_cafe.has_sockets = request.json['has_sockets']
@@ -86,7 +90,14 @@ def delete_cafe(cafe_id):
 
 
 ## SEARCH CAFE: api/cafe/?location
-
+@app.route("/search")
+def search_cafe():
+    requested_location = request.args.get('loc')
+    cafes = db.session.query(Cafes).filter_by(location=requested_location.title()).all()
+    if cafes:
+        return cafes_schema.jsonify(cafes)
+    else:
+        return {"error": {"Not Found": "Sorry, we don't have a cafe at that location."}}
 
 
 if __name__ == ("__main__"):
